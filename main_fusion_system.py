@@ -2,8 +2,29 @@
 """
 Main Coordinate Sensor Fusion System with Movement Integration
 Enhanced Coordinate Sensor Fusion System with robot movement infrastructure
-FIXED: Critical person obstacle filtering for navigation
-ADDED: Navigation diagnostics logging for debugging
+
+VERSION HISTORY:
+v2.0.1 (2025-12-02 09:00): REVERTED SCREEN_X CHANGES
+- REVERTED: Removed screen_x_normalized calculation and parameter passing
+- Person detection restored to previous working state
+- Reacquisition head tracking defaults to 'center' (no screen position)
+
+v2.0 (2025-12-01 16:00): STOP AND REACQUIRE METHODOLOGY
+- Integrated reacquisition control: head tracking + body rotation
+- Head turns toward last screen position (left/right/center)
+- Body rotates toward pre-avoidance orientation
+- Passes screen X position to navigator for head direction
+- Robot STOPS completely during reacquisition (no forward motion)
+
+v1.1 (2025-12-01 15:45): FASTER MANUAL CONTROL
+- Arrow key speed: 0.5 → 0.85 (70% faster manual navigation)
+
+FEATURES:
+- Critical person obstacle filtering for navigation
+- Navigation diagnostics logging for debugging
+- Test mode support (Press 1 or 2 to set test mode)
+- Manual arrow key control with release detection
+- Automatic reacquisition via head tracking and body rotation
 """
 import pygame
 import math
@@ -23,6 +44,7 @@ from systems.sensors.lidar_system import OptimizedLidarSystem
 from systems.control.head_controller import OptimizedNoValidationHeadController
 from systems.navigation.potential_field_navigator import PotentialFieldNavigator
 from systems.navigation.navigation_diagnostics import NavigationDiagnosticsLogger
+
 
 class EnhancedCoordinateSensorFusionWithMovement:
     """ENHANCED Coordinate Sensor Fusion System with robot movement infrastructure and navigation"""
@@ -99,7 +121,7 @@ class EnhancedCoordinateSensorFusionWithMovement:
         self.navigation_enabled = False
         self.show_navigation_forces = False
         
-        # FIXED: Person filtering tracking
+        # Person filtering tracking
         self.person_lidar_angle = 0.0
         self.person_lidar_distance = 0.0
         self.obstacles_filtered_count = 0
@@ -109,19 +131,10 @@ class EnhancedCoordinateSensorFusionWithMovement:
             pygame.init()
         pygame.font.init()
     
-    def filter_person_obstacles(self, obstacles, person_lidar_angle, person_lidar_distance, exclusion_radius=300.0):
+    def filter_person_obstacles(self, obstacles, person_lidar_angle, person_lidar_distance, exclusion_radius=200.0):
         """
         CRITICAL: Remove LiDAR obstacles within exclusion_radius of detected person position
         This prevents the person from being treated as an obstacle to avoid
-        
-        Args:
-            obstacles: List of (angle, distance) tuples from LiDAR
-            person_lidar_angle: Person's angle in LiDAR coordinate frame (degrees)
-            person_lidar_distance: Person's distance in LiDAR coordinate frame (mm)
-            exclusion_radius: Radius around person to exclude obstacles (mm)
-            
-        Returns:
-            List of filtered obstacles excluding those near the person
         """
         if not obstacles or person_lidar_distance <= 0:
             return obstacles
@@ -130,13 +143,10 @@ class EnhancedCoordinateSensorFusionWithMovement:
         filtered_count = 0
         
         for obs_angle, obs_distance in obstacles:
-            # Calculate angular difference (handle wraparound)
             angle_diff = abs(obs_angle - person_lidar_angle)
             if angle_diff > 180:
                 angle_diff = 360 - angle_diff
             
-            # Calculate approximate distance between obstacle and person
-            # Using law of cosines: c² = a² + b² - 2ab*cos(C)
             try:
                 angle_diff_rad = math.radians(angle_diff)
                 distance_between = math.sqrt(
@@ -144,14 +154,12 @@ class EnhancedCoordinateSensorFusionWithMovement:
                     2 * obs_distance * person_lidar_distance * math.cos(angle_diff_rad)
                 )
                 
-                # Keep obstacle if it's outside the exclusion radius
                 if distance_between > exclusion_radius:
                     filtered_obstacles.append((obs_angle, obs_distance))
                 else:
                     filtered_count += 1
                     
             except Exception:
-                # If calculation fails, keep the obstacle to be safe
                 filtered_obstacles.append((obs_angle, obs_distance))
         
         self.obstacles_filtered_count = filtered_count
@@ -174,67 +182,13 @@ class EnhancedCoordinateSensorFusionWithMovement:
                                 'offset_x': float(row['offset_x']),
                                 'offset_y': float(row['offset_y'])
                             }
-                            if 'actual_distance_measured' in row:
-                                sample['actual_distance_measured'] = float(row['actual_distance_measured'])
-                            if 'servo_angle_degrees' in row:
-                                sample['servo_angle_degrees'] = float(row['servo_angle_degrees'])
-                            if 'person_angle_from_robot_center' in row:
-                                sample['person_angle_from_robot_center'] = float(row['person_angle_from_robot_center'])
-                            if 'alignment_error_magnitude' in row:
-                                sample['alignment_error_magnitude'] = float(row['alignment_error_magnitude'])
-                            if 'sample_quality' in row:
-                                sample['sample_quality'] = int(row['sample_quality'])
-                            if 'lighting_conditions' in row:
-                                sample['lighting_conditions'] = row['lighting_conditions']
-                            if 'timestamp' in row:
-                                sample['timestamp'] = float(row['timestamp'])
                             self.calibration_samples.append(sample)
-                        except (ValueError, KeyError):
-                            continue
-                            
-                if self.calibration_samples:
-                    total_offset_x = sum(s['offset_x'] for s in self.calibration_samples)
-                    total_offset_y = sum(s['offset_y'] for s in self.calibration_samples)
-                    self.current_dynamic_offset_x = total_offset_x / len(self.calibration_samples)
-                    self.current_dynamic_offset_y = total_offset_y / len(self.calibration_samples)
-                else:
-                    self.current_dynamic_offset_x = 0.0
-                    self.current_dynamic_offset_y = 0.0
-            else:
-                self.calibration_samples = []
-                self.current_dynamic_offset_x = 0.0
-                self.current_dynamic_offset_y = 0.0
+                        except Exception:
+                            pass
         except Exception:
             self.calibration_samples = []
-            self.current_dynamic_offset_x = 0.0
-            self.current_dynamic_offset_y = 0.0
-
-    def save_calibration_data(self):
-        """Save calibration data to CSV file"""
-        try:
-            with open(self.calibration_csv_filename, 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow([
-                    'distance', 'lateral_angle', 'person_x', 'person_y', 'offset_x', 'offset_y',
-                    'actual_distance_measured', 'servo_angle_degrees', 'person_angle_from_robot_center',
-                    'alignment_error_magnitude', 'sample_quality', 'lighting_conditions', 'timestamp'
-                ])
-                for sample in self.calibration_samples:
-                    writer.writerow([
-                        sample['distance'], sample['lateral_angle'], sample['person_x'], 
-                        sample['person_y'], sample['offset_x'], sample['offset_y'],
-                        sample.get('actual_distance_measured', sample['distance']),
-                        sample.get('servo_angle_degrees', 0.0),
-                        sample.get('person_angle_from_robot_center', sample['lateral_angle']),
-                        sample.get('alignment_error_magnitude', 0.0),
-                        sample.get('sample_quality', 5),
-                        sample.get('lighting_conditions', 'unknown'),
-                        sample.get('timestamp', time.time())
-                    ])
-        except Exception:
-            pass
-
-    def calculate_dynamic_offset(self, person_distance, person_angle, person_x, person_y):
+    
+    def calculate_dynamic_offset(self, person_distance, person_angle, base_x=0, base_y=0):
         """Calculate dynamic offset based on calibration samples"""
         try:
             if not self.calibration_samples:
@@ -339,7 +293,8 @@ class EnhancedCoordinateSensorFusionWithMovement:
             self.initialized = True
             return True
             
-        except Exception:
+        except Exception as e:
+            print(f"Initialization error: {e}")
             return False
     
     def initialize_enhanced_csv_log(self):
@@ -437,6 +392,193 @@ class EnhancedCoordinateSensorFusionWithMovement:
         except Exception:
             return 0.0, 0.0, 0.0
     
+    def update_all_systems(self, person_data=None, obstacles=None):
+        """Update all systems with navigation and diagnostics"""
+        if self.detection_system:
+            self.detection_system.update_imu_data()
+        
+        movement_status = self.velocity_manager.get_movement_status() if self.velocity_manager else {
+            'is_moving': False, 'current_direction': 'NONE', 'current_speed': 0.0,
+            'motor_initialized': False, 'total_movement_commands': 0, 'movement_success_rate': 0.0,
+            'avg_movement_duration': 0.0
+        }
+        
+        imu_status = self.detection_system.get_imu_status() if self.detection_system else {
+            'imu_initialized': False, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'smoothed_yaw': 0.0,
+            'angular_vel_x': 0.0, 'angular_vel_y': 0.0, 'angular_vel_z': 0.0,
+            'accel_x': 0.0, 'accel_y': 0.0, 'accel_z': 0.0, 'imu_update_rate': 0.0
+        }
+        
+        if self.robot_state_tracker:
+            head_status = self.head_controller.get_status() if self.head_controller else {}
+            self.robot_state_tracker.update_state(movement_status, imu_status, head_status)
+            robot_state = self.robot_state_tracker.get_robot_state()
+        else:
+            robot_state = {
+                'position_x': 0.0, 'position_y': 0.0, 'orientation': 0.0,
+                'velocity_x': 0.0, 'velocity_y': 0.0, 'total_distance_traveled': 0.0,
+                'total_rotation': 0.0, 'position_confidence': 1.0, 'orientation_confidence': 1.0
+            }
+        
+        # Default navigation status
+        navigation_status = {'navigation_enabled': False, 'current_state': 'IDLE', 'has_person_target': False, 
+                            'goal_reached': False, 'person_distance': 0.0, 'person_angle': 0.0, 
+                            'time_since_person_update': 0, 'attractive_force_magnitude': 0.0,
+                            'repulsive_force_magnitude': 0.0, 'total_force_magnitude': 0.0,
+                            'current_movement_direction': 'NONE', 'current_movement_speed': 0.0,
+                            'navigation_success_rate': 0.0, 'goals_reached': 0, 'force_calculations_count': 0}
+        
+        # Variables for diagnostics logging
+        nav_command = None
+        forces = {'attractive': (0.0, 0.0), 'repulsive': (0.0, 0.0), 'total': (0.0, 0.0)}
+        filtered_obstacles = obstacles if obstacles else []
+        
+        if self.navigator:
+            try:
+                self.navigator.update_robot_state(robot_state)
+                
+                # Transform person coordinates and filter obstacles
+                if person_data:
+                    x_camera = person_data['x_camera']
+                    z_camera = person_data['z_camera']
+                    
+                    servo_position = self.head_controller.current_position if self.head_controller else 0.0
+                    lidar_angle, lidar_distance = self.transform_camera_to_lidar_coords(
+                        x_camera, z_camera, servo_position
+                    )
+                    
+                    # Store person coordinates for filtering
+                    self.person_lidar_angle = lidar_angle
+                    self.person_lidar_distance = lidar_distance
+                    
+                    # Filter out obstacles near the person (reduced radius to prevent excluding real obstacles)
+                    if obstacles:
+                        filtered_obstacles = self.filter_person_obstacles(
+                            obstacles, lidar_angle, lidar_distance, exclusion_radius=200.0
+                        )
+                    
+                    # Update navigator with person target
+                    self.navigator.update_person_target(person_data, lidar_distance, lidar_angle)
+                else:
+                    self.person_lidar_angle = 0.0
+                    self.person_lidar_distance = 0.0
+                    self.obstacles_filtered_count = 0
+                    self.navigator.update_person_target(None, 0, 0)
+                
+                # Calculate forces using filtered obstacles
+                forces = self.navigator.calculate_navigation_forces(filtered_obstacles)
+                self.navigator.update_navigation_state(person_data, filtered_obstacles)
+                
+                navigation_status = self.navigator.get_navigation_status()
+                
+                if self.navigation_enabled and self.movement_enabled and self.velocity_manager:
+                    nav_command = self.navigator.generate_movement_command()
+                    if nav_command:
+                        direction_str = nav_command['direction']
+                        speed = nav_command['speed']
+                        
+                        direction_map = {
+                            'NONE': MovementDirection.NONE,
+                            'FORWARDS': MovementDirection.FORWARDS,
+                            'BACKWARDS': MovementDirection.BACKWARDS,
+                            'LEFT': MovementDirection.LEFT,
+                            'RIGHT': MovementDirection.RIGHT,
+                            'FORWARDS_LEFT': MovementDirection.FORWARDS_LEFT,
+                            'FORWARDS_RIGHT': MovementDirection.FORWARDS_RIGHT,
+                            'BACKWARDS_LEFT': MovementDirection.BACKWARDS_LEFT,
+                            'BACKWARDS_RIGHT': MovementDirection.BACKWARDS_RIGHT,
+                        }
+                        
+                        direction_enum = direction_map.get(direction_str, MovementDirection.NONE)
+                        velocity_config = VelocityConfig(direction_enum, speed)
+                        self.velocity_manager.perform_action(velocity_config)
+                    
+                    # REACQUISITION CONTROL: Handle head tracking and body rotation
+                    reacq_data = self.navigator.get_reacquisition_control_data()
+                    if reacq_data and self.head_controller:
+                        # HEAD TRACKING: Turn head toward last known screen position
+                        head_dir = reacq_data['head_direction']
+                        if head_dir == 'left':
+                            target_servo = -45.0  # Turn head left
+                        elif head_dir == 'right':
+                            target_servo = 45.0  # Turn head right
+                        else:
+                            target_servo = 0.0  # Center
+                        
+                        self.head_controller.move_to_position(target_servo)
+                        
+                        # BODY ROTATION: Turn toward pre-avoidance orientation
+                        bearing_error = reacq_data['bearing_error']
+                        if abs(bearing_error) > 5.0:  # Need to rotate body
+                            if bearing_error > 0:
+                                body_direction = MovementDirection.RIGHT
+                            else:
+                                body_direction = MovementDirection.LEFT
+                            
+                            # Slow rotation speed for precision
+                            rotation_speed = min(0.3, abs(bearing_error) / 100.0)
+                            body_config = VelocityConfig(body_direction, rotation_speed)
+                            self.velocity_manager.perform_action(body_config)
+            except Exception as e:
+                navigation_status['current_state'] = 'ERROR'
+        
+        # Log navigation diagnostics
+        if self.navigation_enabled and self.navigator:
+            try:
+                # Prepare person data for diagnostics
+                diag_person_data = None
+                if person_data:
+                    diag_person_data = {
+                        'detected': True,
+                        'lidar_x_mm': self.person_lidar_distance * math.sin(math.radians(self.person_lidar_angle)),
+                        'lidar_y_mm': self.person_lidar_distance * math.cos(math.radians(self.person_lidar_angle)),
+                        'distance_mm': self.person_lidar_distance,
+                        'lidar_angle_deg': self.person_lidar_angle,
+                        'confidence': person_data.get('confidence', 0),
+                        'age_ms': 0
+                    }
+                
+                # Prepare IMU data for diagnostics
+                diag_imu_data = {
+                    'imu_yaw': imu_status.get('yaw', 0),
+                    'imu_smoothed_yaw': imu_status.get('smoothed_yaw', 0),
+                    'imu_roll': imu_status.get('roll', 0),
+                    'imu_pitch': imu_status.get('pitch', 0),
+                    'imu_angular_vel_z': imu_status.get('angular_vel_z', 0),
+                    'imu_update_rate': imu_status.get('imu_update_rate', 0)
+                }
+                
+                # Prepare movement command for diagnostics
+                diag_movement_cmd = None
+                if nav_command:
+                    diag_movement_cmd = {
+                        'direction': nav_command.get('direction', 'NONE'),
+                        'speed': nav_command.get('speed', 0),
+                        'motor_1': 0,
+                        'motor_2': 0
+                    }
+                
+                # Log the navigation cycle
+                self.nav_diagnostics.log_navigation_cycle(
+                    person_data=diag_person_data,
+                    robot_state=robot_state,
+                    imu_data=diag_imu_data,
+                    attractive_force=forces.get('attractive', (0.0, 0.0)),
+                    repulsive_force=forces.get('repulsive', (0.0, 0.0)),
+                    total_force=forces.get('total', (0.0, 0.0)),
+                    obstacles=filtered_obstacles,
+                    movement_command=diag_movement_cmd,
+                    nav_state=navigation_status.get('current_state', 'UNKNOWN'),
+                    goal_reached=navigation_status.get('goal_reached', False),
+                    stuck_detected=navigation_status.get('robot_stuck', False),
+                    obstacles_filtered=self.obstacles_filtered_count,
+                    calculation_time_ms=0.0
+                )
+            except Exception:
+                pass
+        
+        return movement_status, imu_status, navigation_status
+    
     def log_enhanced_detection_to_csv(self, person_data, head_status, movement_status, robot_state, imu_status, navigation_status):
         """Log detection data to CSV"""
         try:
@@ -506,6 +648,129 @@ class EnhancedCoordinateSensorFusionWithMovement:
                     navigation_status['current_movement_direction'], navigation_status['current_movement_speed'], navigation_status['navigation_success_rate'],
                     navigation_status['goals_reached'], navigation_status['force_calculations_count'], self.obstacles_filtered_count
                 ])
+        except Exception:
+            pass
+    
+    def main_loop(self):
+        """Main application loop"""
+        if not self.initialize_all_systems():
+            return False
+        
+        clock = pygame.time.Clock()
+        target_fps = 25
+        
+        try:
+            while self.running:
+                self.calculate_fps()
+                self.update_counter += 1
+                
+                if self.detection_system:
+                    self.detection_system.update_camera_frame()
+                
+                person_data = self.get_person_detection()
+                
+                obstacles = []
+                if self.lidar_system:
+                    obstacles = self.lidar_system.get_display_obstacles()
+                
+                movement_status, imu_status, navigation_status = self.update_all_systems(person_data, obstacles)
+                
+                self.handle_enhanced_events(person_data)
+                
+                if self.head_controller:
+                    self.head_controller.update_person_detection(person_data)
+                    self.head_controller.execute_head_tracking()
+                    head_status = self.head_controller.get_status()
+                else:
+                    head_status = {
+                        'initialized': False, 'position': 0.0, 'is_moving': False,
+                        'person_detected': False, 'person_x': None, 'person_centered': False,
+                        'total_moves': 0, 'successful_centers': 0, 'false_positive_rejections': 0,
+                        'can_move': False, 'time_since_last_move': 0,
+                        'consecutive_successes': 0, 'consecutive_failures': 0
+                    }
+                
+                robot_state = self.robot_state_tracker.get_robot_state() if self.robot_state_tracker else {
+                    'position_x': 0.0, 'position_y': 0.0, 'orientation': 0.0,
+                    'velocity_x': 0.0, 'velocity_y': 0.0, 'total_distance_traveled': 0.0,
+                    'total_rotation': 0.0, 'position_confidence': 1.0, 'orientation_confidence': 1.0
+                }
+                
+                self.log_enhanced_detection_to_csv(person_data, head_status, movement_status, robot_state, imu_status, navigation_status)
+                
+                if self.update_counter % self.display_update_rate == 0:
+                    try:
+                        self.screen.fill((0, 0, 0))
+                        self.draw_radar_grid()
+                        self.draw_robot()
+                        
+                        obstacle_count = 0
+                        if obstacles:
+                            obstacle_count = self.draw_lidar_data(obstacles)
+                        
+                        if person_data:
+                            self.draw_person_detection(person_data)
+                        
+                        self.draw_stable_status_display()
+                        pygame.display.flip()
+                    except Exception:
+                        pass
+                
+                clock.tick(target_fps)
+                
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            pass
+        finally:
+            self.cleanup()
+        
+        return True
+    
+    def cleanup(self):
+        """Cleanup all systems"""
+        # Write navigation diagnostics reports
+        try:
+            self.nav_diagnostics.write_summary_report()
+            self.nav_diagnostics.write_anomaly_report()
+            print("\n" + "=" * 60)
+            print("NAVIGATION DIAGNOSTICS REPORTS WRITTEN")
+            print(f"Check nav_logs/ directory for detailed analysis")
+            print("=" * 60 + "\n")
+        except Exception:
+            pass
+        
+        try:
+            if self.velocity_manager:
+                stop_config = VelocityConfig(MovementDirection.NONE, 0.0)
+                self.velocity_manager.perform_action(stop_config)
+                time.sleep(0.2)
+                self.velocity_manager.shutdown()
+        except Exception:
+            pass
+        
+        try:
+            if self.head_controller:
+                self.head_controller.center_servo()
+                time.sleep(0.5)
+        except Exception:
+            pass
+        
+        try:
+            if self.detection_system:
+                self.detection_system.shutdown()
+        except Exception:
+            pass
+        
+        try:
+            if self.lidar_system:
+                self.lidar_system.stop()
+        except Exception:
+            pass
+        
+        try:
+            if pygame.get_init():
+                pygame.quit()
         except Exception:
             pass
     
@@ -709,6 +974,14 @@ class EnhancedCoordinateSensorFusionWithMovement:
             nav_rect = nav_text.get_rect(center=(self.screen.get_width() // 2, 320))
             self.screen.blit(nav_text, nav_rect)
             
+            # Test mode display
+            if self.nav_diagnostics:
+                test_mode_name = self.nav_diagnostics.get_test_mode_name()
+                test_color = (0, 255, 255) if test_mode_name != "GENERAL" else (128, 128, 128)
+                test_text = medium_font.render(f"Test Mode: {test_mode_name} (Press 1 or 2)", True, test_color)
+                test_rect = test_text.get_rect(center=(self.screen.get_width() // 2, 370))
+                self.screen.blit(test_text, test_rect)
+            
         except Exception:
             pass
 
@@ -718,6 +991,15 @@ class EnhancedCoordinateSensorFusionWithMovement:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+                
+                # Test mode selection
+                elif event.key == pygame.K_1:
+                    if self.nav_diagnostics:
+                        self.nav_diagnostics.set_test_mode(1)
+                
+                elif event.key == pygame.K_2:
+                    if self.nav_diagnostics:
+                        self.nav_diagnostics.set_test_mode(2)
                 
                 elif event.key == pygame.K_m:
                     self.movement_enabled = not self.movement_enabled
@@ -742,8 +1024,10 @@ class EnhancedCoordinateSensorFusionWithMovement:
                 elif event.key == pygame.K_f:
                     self.show_navigation_forces = not self.show_navigation_forces
                 
-                elif self.movement_enabled and self.velocity_manager:
-                    movement_speed = 0.5
+                # Manual movement on key press (only when navigation is disabled)
+                elif self.movement_enabled and not self.navigation_enabled and self.velocity_manager:
+                    # MANUAL CONTROL: Increased speed for faster navigation
+                    movement_speed = 0.85  # Increased from 0.5 for faster manual control
                     
                     if event.key == pygame.K_UP:
                         config = VelocityConfig(MovementDirection.FORWARDS, movement_speed)
@@ -760,246 +1044,13 @@ class EnhancedCoordinateSensorFusionWithMovement:
                     elif event.key == pygame.K_SPACE:
                         config = VelocityConfig(MovementDirection.NONE, 0.0)
                         self.velocity_manager.perform_action(config)
+            
+            # Stop movement when arrow keys are released
+            elif event.type == pygame.KEYUP:
+                if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+                    if self.movement_enabled and not self.navigation_enabled and self.velocity_manager:
+                        stop_config = VelocityConfig(MovementDirection.NONE, 0.0)
+                        self.velocity_manager.perform_action(stop_config)
                         
             elif event.type == pygame.QUIT:
                 self.running = False
-    
-    def update_all_systems(self, person_data=None, obstacles=None):
-        """Update all systems - FIXED with person obstacle filtering and diagnostics logging"""
-        if self.detection_system:
-            self.detection_system.update_imu_data()
-        
-        movement_status = self.velocity_manager.get_movement_status() if self.velocity_manager else {
-            'is_moving': False, 'current_direction': 'NONE', 'current_speed': 0.0,
-            'motor_initialized': False, 'total_movement_commands': 0, 'movement_success_rate': 0.0,
-            'avg_movement_duration': 0.0
-        }
-        
-        imu_status = self.detection_system.get_imu_status() if self.detection_system else {
-            'imu_initialized': False, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0, 'smoothed_yaw': 0.0,
-            'angular_vel_x': 0.0, 'angular_vel_y': 0.0, 'angular_vel_z': 0.0,
-            'accel_x': 0.0, 'accel_y': 0.0, 'accel_z': 0.0, 'imu_update_rate': 0.0
-        }
-        
-        if self.robot_state_tracker:
-            head_status = self.head_controller.get_status() if self.head_controller else {}
-            self.robot_state_tracker.update_state(movement_status, imu_status, head_status)
-            robot_state = self.robot_state_tracker.get_robot_state()
-        else:
-            robot_state = {
-                'position_x': 0.0, 'position_y': 0.0, 'orientation': 0.0,
-                'velocity_x': 0.0, 'velocity_y': 0.0, 'total_distance_traveled': 0.0,
-                'total_rotation': 0.0, 'position_confidence': 1.0, 'orientation_confidence': 1.0
-            }
-        
-        # Default navigation status
-        navigation_status = {'navigation_enabled': False, 'current_state': 'IDLE', 'has_person_target': False, 
-                            'goal_reached': False, 'person_distance': 0.0, 'person_angle': 0.0, 
-                            'time_since_person_update': 0, 'attractive_force_magnitude': 0.0,
-                            'repulsive_force_magnitude': 0.0, 'total_force_magnitude': 0.0,
-                            'current_movement_direction': 'NONE', 'current_movement_speed': 0.0,
-                            'navigation_success_rate': 0.0, 'goals_reached': 0, 'force_calculations_count': 0}
-        
-        # Variables for diagnostics logging
-        nav_command = None
-        forces = {'attractive': (0.0, 0.0), 'repulsive': (0.0, 0.0), 'total': (0.0, 0.0)}
-        filtered_obstacles = obstacles if obstacles else []
-        
-        if self.navigator:
-            try:
-                self.navigator.update_robot_state(robot_state)
-                
-                # FIXED: Transform person coordinates and filter obstacles
-                if person_data:
-                    x_camera = person_data['x_camera']
-                    z_camera = person_data['z_camera']
-                    servo_position = self.head_controller.current_position if self.head_controller else 0.0
-                    lidar_angle, lidar_distance = self.transform_camera_to_lidar_coords(
-                        x_camera, z_camera, servo_position
-                    )
-                    
-                    # Store person coordinates for filtering
-                    self.person_lidar_angle = lidar_angle
-                    self.person_lidar_distance = lidar_distance
-                    
-                    # CRITICAL FIX: Filter out obstacles near the person
-                    if obstacles:
-                        filtered_obstacles = self.filter_person_obstacles(
-                            obstacles, lidar_angle, lidar_distance, exclusion_radius=300.0
-                        )
-                    
-                    self.navigator.update_person_target(person_data, lidar_distance, lidar_angle)
-                else:
-                    self.person_lidar_angle = 0.0
-                    self.person_lidar_distance = 0.0
-                    self.obstacles_filtered_count = 0
-                    self.navigator.update_person_target(None, 0, 0)
-                
-                # Use filtered obstacles for navigation calculations
-                forces = self.navigator.calculate_navigation_forces(filtered_obstacles)
-                self.navigator.update_navigation_state(person_data, filtered_obstacles)
-                
-                navigation_status = self.navigator.get_navigation_status()
-                
-                if self.navigation_enabled and self.movement_enabled and self.velocity_manager:
-                    nav_command = self.navigator.generate_movement_command()
-                    if nav_command:
-                        direction_str = nav_command['direction']
-                        speed = nav_command['speed']
-                        
-                        direction_map = {
-                            'NONE': MovementDirection.NONE,
-                            'FORWARDS': MovementDirection.FORWARDS,
-                            'BACKWARDS': MovementDirection.BACKWARDS,
-                            'LEFT': MovementDirection.LEFT,
-                            'RIGHT': MovementDirection.RIGHT,
-                            'FORWARDS_LEFT': MovementDirection.FORWARDS_LEFT,
-                            'FORWARDS_RIGHT': MovementDirection.FORWARDS_RIGHT,
-                            'BACKWARDS_LEFT': MovementDirection.BACKWARDS_LEFT,
-                            'BACKWARDS_RIGHT': MovementDirection.BACKWARDS_RIGHT,
-                        }
-                        
-                        direction_enum = direction_map.get(direction_str, MovementDirection.NONE)
-                        velocity_config = VelocityConfig(direction_enum, speed)
-                        self.velocity_manager.perform_action(velocity_config)
-            except Exception as e:
-                navigation_status['current_state'] = 'ERROR'
-        
-        # Log navigation diagnostics when navigation is enabled
-        if self.navigation_enabled and self.navigator:
-            try:
-                self.nav_diagnostics.log_navigation_cycle(
-                    person_data=person_data,
-                    person_lidar_angle=self.person_lidar_angle,
-                    person_lidar_distance=self.person_lidar_distance,
-                    robot_state=robot_state,
-                    person_target=self.navigator.person_target,
-                    forces=forces,
-                    movement_command=nav_command,
-                    obstacles=filtered_obstacles,
-                    obstacles_filtered_count=self.obstacles_filtered_count,
-                    nav_state=navigation_status.get('current_state', 'UNKNOWN'),
-                    goal_reached=navigation_status.get('goal_reached', False)
-                )
-            except Exception:
-                pass
-        
-        return movement_status, imu_status, navigation_status
-    
-    def main_loop(self):
-        """Main application loop"""
-        if not self.initialize_all_systems():
-            return False
-        
-        clock = pygame.time.Clock()
-        target_fps = 25
-        
-        try:
-            while self.running:
-                self.calculate_fps()
-                self.update_counter += 1
-                
-                if self.detection_system:
-                    self.detection_system.update_camera_frame()
-                
-                person_data = self.get_person_detection()
-                
-                obstacles = []
-                if self.lidar_system:
-                    obstacles = self.lidar_system.get_display_obstacles()
-                
-                movement_status, imu_status, navigation_status = self.update_all_systems(person_data, obstacles)
-                
-                self.handle_enhanced_events(person_data)
-                
-                if self.head_controller:
-                    self.head_controller.update_person_detection(person_data)
-                    self.head_controller.execute_head_tracking()
-                    head_status = self.head_controller.get_status()
-                else:
-                    head_status = {
-                        'initialized': False, 'position': 0.0, 'is_moving': False,
-                        'person_detected': False, 'person_x': None, 'person_centered': False,
-                        'total_moves': 0, 'successful_centers': 0, 'false_positive_rejections': 0,
-                        'can_move': False, 'time_since_last_move': 0,
-                        'consecutive_successes': 0, 'consecutive_failures': 0
-                    }
-                
-                robot_state = self.robot_state_tracker.get_robot_state() if self.robot_state_tracker else {
-                    'position_x': 0.0, 'position_y': 0.0, 'orientation': 0.0,
-                    'velocity_x': 0.0, 'velocity_y': 0.0, 'total_distance_traveled': 0.0,
-                    'total_rotation': 0.0, 'position_confidence': 1.0, 'orientation_confidence': 1.0
-                }
-                
-                self.log_enhanced_detection_to_csv(person_data, head_status, movement_status, robot_state, imu_status, navigation_status)
-                
-                if self.update_counter % self.display_update_rate == 0:
-                    try:
-                        self.screen.fill((0, 0, 0))
-                        self.draw_radar_grid()
-                        self.draw_robot()
-                        
-                        obstacle_count = 0
-                        if obstacles:
-                            obstacle_count = self.draw_lidar_data(obstacles)
-                        
-                        if person_data:
-                            self.draw_person_detection(person_data)
-                        
-                        self.draw_stable_status_display()
-                        pygame.display.flip()
-                    except Exception:
-                        pass
-                
-                clock.tick(target_fps)
-                
-        except KeyboardInterrupt:
-            pass
-        except Exception:
-            pass
-        finally:
-            self.cleanup()
-        
-        return True
-    
-    def cleanup(self):
-        """Cleanup all systems"""
-        # Write navigation diagnostics report before shutdown
-        try:
-            self.nav_diagnostics.write_anomaly_report()
-        except Exception:
-            pass
-        
-        try:
-            if self.velocity_manager:
-                stop_config = VelocityConfig(MovementDirection.NONE, 0.0)
-                self.velocity_manager.perform_action(stop_config)
-                time.sleep(0.2)
-                self.velocity_manager.shutdown()
-        except Exception:
-            pass
-        
-        try:
-            if self.head_controller:
-                self.head_controller.center_servo()
-                time.sleep(0.5)
-        except Exception:
-            pass
-        
-        try:
-            if self.detection_system:
-                self.detection_system.shutdown()
-        except Exception:
-            pass
-        
-        try:
-            if self.lidar_system:
-                self.lidar_system.stop()
-        except Exception:
-            pass
-        
-        try:
-            if pygame.get_init():
-                pygame.quit()
-        except Exception:
-            pass

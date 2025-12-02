@@ -1,0 +1,60 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_104355
+Test Mode: GENERAL
+Duration: 171.9 seconds (2.9 minutes)
+======================================================================
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 1004
+Total events logged: 9
+Log rate: 5.8 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 1004
+Direction mismatches: 404
+Stuck events: 1004
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 1004
+  FORCE_AWAY_FROM_PERSON: 404
+  TURNING_WRONG_WAY: 114
+  BACKWARD_TOWARD_FRONT_PERSON: 7
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 1.422, Max: 1.953, Min: 0.253
+Repulsive force  - Avg: 10.351, Max: 38.220, Min: 0.000
+Total force      - Avg: 3.634, Max: 5.000, Min: 0.199
+Zero force percentage: 0.0%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 88.0°, Max: 179.6°, Min: 0.0°
+Large errors (>45°): 543 (82.8%)
+Very large errors (>90°): 404 (61.6%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 91.0° to 123.7° (span: 32.7°)
+Estimated drift: 15.01°
+Yaw variance: 53.23
+WARNING: Significant IMU drift detected!
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• CRITICAL: Frequent direction mismatches - force pointing away from person
+• WARNING: Multiple stuck events detected
+• WARNING: Significant IMU drift may affect navigation
+• CRITICAL: Average direction error > 45° - coordinate system issue likely
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✓ TEST 0 (GENERAL): PASSED
+
+======================================================================
+END OF REPORT
+======================================================================

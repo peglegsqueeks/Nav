@@ -1,0 +1,50 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_100007
+Test Mode: GENERAL
+Duration: 27.4 seconds (0.5 minutes)
+======================================================================
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 534
+Total events logged: 1
+Log rate: 19.5 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 525
+Direction mismatches: 0
+Stuck events: 525
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 525
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 0.000, Max: 0.000, Min: 0.000
+Repulsive force  - Avg: 109.802, Max: 511.125, Min: 0.000
+Total force      - Avg: 3.792, Max: 5.000, Min: 0.000
+Zero force percentage: 24.2%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 0.0° to 0.0° (span: 0.0°)
+Estimated drift: 0.00°
+Yaw variance: 0.00
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• WARNING: Multiple stuck events detected
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✓ TEST 0 (GENERAL): PASSED
+
+======================================================================
+END OF REPORT
+======================================================================

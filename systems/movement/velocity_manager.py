@@ -3,7 +3,7 @@
 Enhanced Direct Velocity Manager for robot base movement
 Handles motoron controller integration with safety features and movement tracking
 
-CLEAN BRAKE VERSION - 2025-11-25
+PIN 18 BRAKE VERSION - 2025-11-30
 ================================
 Brake is controlled EXACTLY TWICE:
 1. __init__: GPIO HIGH = brake OFF
@@ -11,6 +11,8 @@ Brake is controlled EXACTLY TWICE:
 
 NO turn_brake_on() or turn_brake_off() methods exist.
 NO brake toggling during operation.
+
+GPIO Pin 18 used for brake relay (moved from Pin 11 to avoid interference)
 ================================
 """
 import time
@@ -27,22 +29,22 @@ except ImportError as e:
     MOTOR_AVAILABLE = False
 
 # =============================================================================
-# VERIFICATION: This message proves the CLEAN version is loaded
+# VERIFICATION: This message proves the PIN 18 version is loaded
 # =============================================================================
 print("=" * 60)
-print("VELOCITY_MANAGER: CLEAN BRAKE VERSION 2025-11-25 LOADED")
+print("VELOCITY_MANAGER: PIN 18 BRAKE VERSION 2025-11-30 LOADED")
 print("=" * 60)
 
 class EnhancedDirectVelocityManager(ActionManager):
     """
-    Enhanced Direct velocity manager - CLEAN BRAKE VERSION
+    Enhanced Direct velocity manager - PIN 18 BRAKE VERSION
     
     Brake is set OFF at startup and stays OFF until program exit.
     NO brake control during operation.
     """
     
     REFERENCE_MV = 3300
-    PIN = 7  # GPIO pin for brake relay
+    PIN = 18  # GPIO pin for brake relay (BOARD numbering) - Changed from Pin 11 to Pin 18
     
     MAX_ACCELERATION = 50
     MAX_DECELERATION = 40
@@ -109,7 +111,7 @@ class EnhancedDirectVelocityManager(ActionManager):
                 # This is the ONLY place brake is turned OFF
                 # ==========================================================
                 GPIO.output(self.PIN, GPIO.HIGH)
-                print("VELOCITY_MANAGER: Brake set to OFF (GPIO HIGH)")
+                print(f"VELOCITY_MANAGER: Brake set to OFF (GPIO PIN {self.PIN} HIGH)")
                 
                 if not self.simulate:
                     self.initialise_motor_control()
@@ -144,7 +146,7 @@ class EnhancedDirectVelocityManager(ActionManager):
             if MOTOR_AVAILABLE and self.gpio_initialized:
                 try:
                     GPIO.output(self.PIN, GPIO.LOW)
-                    print("VELOCITY_MANAGER: Brake set to ON (GPIO LOW)")
+                    print(f"VELOCITY_MANAGER: Brake set to ON (GPIO PIN {self.PIN} LOW)")
                 except Exception:
                     pass
 
@@ -301,5 +303,6 @@ class EnhancedDirectVelocityManager(ActionManager):
             'movement_success_rate': (self.successful_movements / max(1, self.total_movement_commands)) * 100,
             'time_since_last_movement': time.time() - self.last_movement_time if self.last_movement_time > 0 else 0,
             'avg_movement_duration': avg_movement_duration,
-            'simulate_mode': self.simulate
+            'simulate_mode': self.simulate,
+            'gpio_pin': self.PIN
         }

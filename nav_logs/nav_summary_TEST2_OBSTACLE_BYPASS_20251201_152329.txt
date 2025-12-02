@@ -1,0 +1,64 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_152329
+Test Mode: TEST2_OBSTACLE_BYPASS
+Duration: 237.1 seconds (4.0 minutes)
+======================================================================
+
+TEST 2: OBSTACLE BYPASS
+----------------------------------------
+Expected: Robot navigates AROUND obstacle
+Expected: Repulsive forces active near obstacle
+Expected: No stuck detection, successful bypass
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 488
+Total events logged: 5
+Log rate: 2.1 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 356
+Direction mismatches: 2
+Stuck events: 356
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 356
+  FORCE_AWAY_FROM_PERSON: 2
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 1.094, Max: 3.945, Min: 0.000
+Repulsive force  - Avg: 6.528, Max: 8.000, Min: 0.000
+Total force      - Avg: 6.738, Max: 8.000, Min: 0.000
+Zero force percentage: 9.8%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 60.4°, Max: 93.3°, Min: 4.7°
+Large errors (>45°): 40 (80.0%)
+Very large errors (>90°): 2 (4.0%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: -160.2° to 169.5° (span: 329.7°)
+Estimated drift: -263.96°
+Yaw variance: 21232.21
+WARNING: Significant IMU drift detected!
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• WARNING: Multiple stuck events detected
+• WARNING: Significant IMU drift may affect navigation
+• CRITICAL: Average direction error > 45° - coordinate system issue likely
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✗ TEST 2 (TEST2_OBSTACLE_BYPASS): FAILED
+  - 356 stuck events - robot may be in local minimum
+
+======================================================================
+END OF REPORT
+======================================================================

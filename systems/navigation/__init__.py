@@ -8,6 +8,8 @@ Potential field navigation for autonomous person following with obstacle avoidan
 from .field_calculations import PotentialFieldCalculations
 from .navigation_state_machine import NavigationStateMachine, NavigationState
 from .potential_field_navigator import PotentialFieldNavigator
+from .navigation_diagnostics import NavigationDiagnosticsLogger
+
 
 __all__ = [
     'PotentialFieldCalculations',

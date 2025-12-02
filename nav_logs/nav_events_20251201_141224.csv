@@ -1,0 +1,1 @@
+timestamp,elapsed_time,event_type,event_description,prev_state,new_state,person_detected,person_distance_mm,force_magnitude,commanded_direction,imu_yaw,additional_data

@@ -1,11 +1,54 @@
 #!/usr/bin/env python3
 """
-Potential Field Mathematics Engine - FIXED VERSION
+Potential Field Mathematics Engine - VERSION 4.3
 Core mathematical calculations for attractive and repulsive force fields
 Handles force vector summation and force-to-velocity conversion
+
+VERSION HISTORY:
+v4.3 (2025-12-02 08:45): FORCE BALANCE - 3RD ITERATION
+- CRITICAL: repulsive_strength: 1.2 → 0.8 (33% reduction - much gentler!)
+- CRITICAL: max_repulsive_magnitude: 2.5 → 2.0 (20% reduction)
+- Problem: Repulsive STILL maxing at 2.5 entire test, overwhelming attractive 3.0
+- Target ratio: Attractive 6.0 vs Repulsive cap 2.0 (3:1 attractive dominant!)
+- Expected forces: 800mm=0.8, 400mm=1.6, 200mm=2.0 (capped but manageable)
+
+v4.2 (2025-12-02 08:30): CRITICAL FORCE BALANCE FIX
+- CRITICAL: max_repulsive_magnitude: 8.0 → 3.5 (was causing circular motion!)
+- Reduced repulsive_strength: 2.0 → 1.5 (prevent overwhelming attraction)
+- Problem: Repulsive was maxing at 8.0, overwhelming attractive 3.6, causing LEFT turns
+
+v4.1 (2025-12-01 15:50): SLIGHTLY GENTLER OBSTACLE AVOIDANCE TURNS
+- Reduced angle_weight: 0.3 → 0.25 (slight 17% reduction, not 50%!)
+- Result: Robot turns slightly less sharply when avoiding obstacles ahead
+
+v4 (2025-12-01 15:30): EXPONENTIAL OBSTACLE AVOIDANCE
+- Attractive strength: 6.0 (strong long-range pull)
+- Repulsive strength: 2.0 (base strength)
+- Repulsive influence radius: 1000mm (detect obstacles at 1m)
+- Max repulsive magnitude: 8.0 (allow very strong avoidance)
+- Inverse CUBE law for obstacles < 300mm (exponential close-range push!)
+- Inverse SQUARE law for obstacles 300-600mm (strong push)
+- Linear falloff for obstacles 600-1000mm (gentle push)
+- Changed long-range attractive: inverse square → linear (maintain strength at distance)
+
+v3 (2025-12-01 14:00): OBSTACLE DETECTION RANGE
+- Increased repulsive_influence_radius: 500mm → 1000mm
+- Increased attractive_strength: 4.0 → 5.0
+- Balanced for Test 2 obstacle bypass
+
+v2 (2025-12-01 12:00): FORCE BALANCE TUNING
+- Increased attractive_strength: 2.0 → 3.5
+- Decreased repulsive_strength: 3.0 → 1.5
+- Decreased repulsive_influence_radius: 800mm → 600mm
+- Added repulsive force cap to prevent overwhelming attraction
+
+v1 (2025-12-01 10:00): COORDINATE SYSTEM FIX
+- Fixed atan2 argument order for robot coordinate system
+- Robot frame: 0° = Forward (+Y), 90° = Right (+X)
 """
 import math
 from typing import List, Tuple, Dict, Any
+
 
 class PotentialFieldCalculations:
     """
@@ -15,22 +58,23 @@ class PotentialFieldCalculations:
     
     def __init__(self):
         # ATTRACTIVE FIELD PARAMETERS (towards person)
-        self.attractive_strength = 2.0  # Base attractive force strength
+        self.attractive_strength = 6.0  # Strong long-range pull
         self.attractive_max_distance = 5000.0  # mm - beyond this, no attraction
-        self.attractive_min_distance = 500.0  # mm - minimum safe distance to person
+        self.attractive_min_distance = 300.0  # mm - minimum safe distance to person
         
         # REPULSIVE FIELD PARAMETERS (from obstacles)
-        self.repulsive_strength = 3.0  # Base repulsive force strength  
-        self.repulsive_influence_radius = 800.0  # mm - obstacles influence within this radius
-        self.repulsive_max_force_distance = 300.0  # mm - maximum repulsive force distance
+        self.repulsive_strength = 0.8  # REDUCED from 1.2 - much gentler base strength!
+        self.repulsive_influence_radius = 1000.0  # mm - obstacle detection radius
+        self.repulsive_max_force_distance = 600.0  # mm - stronger push zone
+        self.max_repulsive_magnitude = 2.0  # CRITICAL: Reduced from 2.5 - prevent maxing out!
         
         # FORCE LIMITS AND SCALING
-        self.max_total_force = 5.0  # Maximum resultant force magnitude
+        self.max_total_force = 8.0  # Maximum resultant force magnitude
         self.force_to_velocity_scale = 0.3  # Conversion factor from force to velocity
-        self.min_movement_force = 0.2  # Minimum force required to generate movement
+        self.min_movement_force = 0.15  # Minimum force required to generate movement
         
         # GOAL PARAMETERS
-        self.goal_reached_threshold = 600.0  # mm - consider goal reached within this distance
+        self.goal_reached_threshold = 400.0  # mm - consider goal reached within this distance
         
         # PERFORMANCE TRACKING
         self.calculation_count = 0
@@ -57,15 +101,18 @@ class PotentialFieldCalculations:
             
             # Apply different force profiles based on distance
             if distance <= self.attractive_min_distance:
-                # Within minimum safe distance - no or reduced attraction
+                # Within minimum safe distance - reduced attraction
                 force_magnitude = 0.1 * self.attractive_strength
-            elif distance <= 1500.0:  # Close range - linear increase
+            elif distance <= 2000.0:  # Close to mid range - linear increase
                 # Linear increase from min distance to mid range
-                normalized_distance = (distance - self.attractive_min_distance) / 1000.0
+                normalized_distance = (distance - self.attractive_min_distance) / 1700.0
                 force_magnitude = self.attractive_strength * normalized_distance
-            else:  # Long range - inverse square law
-                # Inverse square law for long distance attraction
-                force_magnitude = self.attractive_strength * (1500.0 / distance)**2
+            else:  # Long range - constant strong attraction (not inverse square)
+                # CHANGED: Maintain strong force at long range for obstacle bypass
+                # Use linear falloff instead of inverse square
+                force_magnitude = self.attractive_strength * (2000.0 / distance)
+                # Cap at full strength
+                force_magnitude = min(force_magnitude, self.attractive_strength)
             
             # Apply directional force
             force_x = force_magnitude * unit_x
@@ -108,16 +155,23 @@ class PotentialFieldCalculations:
                 unit_x = -dx / distance_to_obstacle  # Negative because we want to move away
                 unit_y = -dy / distance_to_obstacle
                 
-                # Calculate repulsive force magnitude (inverse relationship with distance)
-                if distance_to_obstacle <= self.repulsive_max_force_distance:
-                    # Very close - maximum repulsive force
-                    force_magnitude = self.repulsive_strength
-                else:
-                    # Inverse square law for repulsive force
+                # Calculate repulsive force magnitude
+                # CRITICAL: Use inverse CUBE for close range to force sharp turns!
+                if distance_to_obstacle <= 300.0:
+                    # VERY close (< 300mm) - inverse cube law for exponential growth
+                    # This creates VERY strong repulsion to force sharp turns
+                    force_magnitude = self.repulsive_strength * (300.0 / distance_to_obstacle)**3
+                elif distance_to_obstacle <= self.repulsive_max_force_distance:
+                    # Close range (300-600mm) - inverse square law
                     force_magnitude = self.repulsive_strength * (self.repulsive_max_force_distance / distance_to_obstacle)**2
+                else:
+                    # Far range (600-1000mm) - linear falloff
+                    distance_ratio = (self.repulsive_influence_radius - distance_to_obstacle) / (self.repulsive_influence_radius - self.repulsive_max_force_distance)
+                    force_magnitude = self.repulsive_strength * distance_ratio
                 
                 # Weight based on obstacle angle (obstacles directly ahead get more weight)
-                angle_weight = 1.0 + 0.5 * math.cos(angle_rad)  # More weight for front obstacles
+                # TUNED: Slightly reduced angle weight to make turns less aggressive
+                angle_weight = 1.0 + 0.25 * math.cos(angle_rad)  # Reduced from 0.3 to 0.25 (slight 17% reduction)
                 
                 # Apply weighted repulsive force
                 repulsive_x = force_magnitude * unit_x * angle_weight
@@ -125,6 +179,13 @@ class PotentialFieldCalculations:
                 
                 total_repulsive_x += repulsive_x
                 total_repulsive_y += repulsive_y
+            
+            # NEW: Cap total repulsive force to prevent overwhelming attraction
+            repulsive_magnitude = math.sqrt(total_repulsive_x**2 + total_repulsive_y**2)
+            if repulsive_magnitude > self.max_repulsive_magnitude:
+                scale = self.max_repulsive_magnitude / repulsive_magnitude
+                total_repulsive_x *= scale
+                total_repulsive_y *= scale
             
             # Store for analysis
             self.repulsive_force_history.append((total_repulsive_x, total_repulsive_y, active_obstacles))
@@ -152,9 +213,9 @@ class PotentialFieldCalculations:
                 total_y *= scale_factor
                 magnitude = self.max_total_force
             
-            # Store for analysis
-            self.total_force_history.append((total_x, total_y, magnitude))
+            # Track calculation
             self.calculation_count += 1
+            self.total_force_history.append((total_x, total_y, magnitude))
             
             return total_x, total_y
             
@@ -162,51 +223,61 @@ class PotentialFieldCalculations:
             return 0.0, 0.0
     
     def convert_force_to_velocity(self, force_x: float, force_y: float, 
-                                 current_orientation: float) -> Tuple[str, float]:
-        """Convert force vector to robot movement direction and speed - FIXED IMPORTS"""
+                         robot_orientation: float = 0.0) -> Tuple[str, float]:
+        """Convert force vector to velocity command (direction and speed)
+        
+        COORDINATE SYSTEM:
+        - Robot frame: 0° = Forward (+Y), 90° = Right (+X)
+        - force_x = lateral force (positive = right)
+        - force_y = forward force (positive = forward)
+        - Use atan2(x, y) to get angle from forward (+Y) axis
+        """
         try:
-            # Calculate force magnitude and direction
-            force_magnitude = math.sqrt(force_x**2 + force_y**2)
+            magnitude = math.sqrt(force_x**2 + force_y**2)
             
-            # Check if force is significant enough to move
-            if force_magnitude < self.min_movement_force:
+            # Check if force is sufficient for movement
+            if magnitude < self.min_movement_force:
                 return "NONE", 0.0
             
-            # Calculate desired movement direction (global frame)
-            desired_angle_rad = math.atan2(force_y, force_x)
-            desired_angle_deg = math.degrees(desired_angle_rad)
+            # Calculate force direction in robot frame
+            # FIXED: atan2(x, y) gives angle from +Y axis (forward)
+            # Positive angles = clockwise = right
+            # Negative angles = counter-clockwise = left
+            force_angle = math.atan2(force_x, force_y)
+            force_angle_deg = math.degrees(force_angle)
             
-            # Convert to robot-relative angle
-            relative_angle = desired_angle_deg - current_orientation
+            # Convert to robot-relative angle (already in robot frame, so just apply orientation offset)
+            relative_angle = force_angle_deg - robot_orientation
             
-            # Normalize angle to -180 to 180
+            # Normalize to -180 to 180
             while relative_angle > 180:
                 relative_angle -= 360
             while relative_angle < -180:
                 relative_angle += 360
             
-            # Calculate movement speed (scaled from force magnitude)
-            speed = min(1.0, force_magnitude * self.force_to_velocity_scale)
+            # Calculate speed based on force magnitude
+            speed = min(1.0, magnitude * self.force_to_velocity_scale)
             
             # Determine movement direction based on relative angle
-            abs_angle = abs(relative_angle)
-            
-            if abs_angle <= 30:  # Within 30 degrees of forward
+            # 0° = forward, positive = right, negative = left
+            if -22.5 <= relative_angle < 22.5:
                 return "FORWARDS", speed
-            elif abs_angle >= 150:  # Within 30 degrees of backward  
-                return "BACKWARDS", speed
-            elif -120 <= relative_angle <= -30:  # Left side
-                if abs_angle <= 60:
-                    return "FORWARDS_LEFT", speed * 0.8
-                else:
-                    return "LEFT", speed * 0.6
-            elif 30 <= relative_angle <= 120:  # Right side
-                if abs_angle <= 60:
-                    return "FORWARDS_RIGHT", speed * 0.8
-                else:
-                    return "RIGHT", speed * 0.6
+            elif 22.5 <= relative_angle < 67.5:
+                return "FORWARDS_RIGHT", speed
+            elif 67.5 <= relative_angle < 112.5:
+                return "RIGHT", speed * 0.7
+            elif 112.5 <= relative_angle < 157.5:
+                return "BACKWARDS_RIGHT", speed * 0.5
+            elif relative_angle >= 157.5 or relative_angle < -157.5:
+                return "BACKWARDS", speed * 0.5
+            elif -157.5 <= relative_angle < -112.5:
+                return "BACKWARDS_LEFT", speed * 0.5
+            elif -112.5 <= relative_angle < -67.5:
+                return "LEFT", speed * 0.7
+            elif -67.5 <= relative_angle < -22.5:
+                return "FORWARDS_LEFT", speed
             else:
-                # Default to turning towards target
+                # Default: turn towards target
                 if relative_angle > 0:
                     return "RIGHT", speed * 0.5
                 else:
@@ -266,6 +337,7 @@ class PotentialFieldCalculations:
             'repulsive_strength': self.repulsive_strength,
             'repulsive_influence_radius': self.repulsive_influence_radius,
             'repulsive_max_force_distance': self.repulsive_max_force_distance,
+            'max_repulsive_magnitude': self.max_repulsive_magnitude,
             'max_total_force': self.max_total_force,
             'force_to_velocity_scale': self.force_to_velocity_scale,
             'goal_reached_threshold': self.goal_reached_threshold,

@@ -1,0 +1,64 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_113105
+Test Mode: TEST1_DIRECT_FORWARD
+Duration: 156.0 seconds (2.6 minutes)
+======================================================================
+
+TEST 1: DIRECT FORWARD TARGET (No Obstacles)
+----------------------------------------
+Expected: Robot moves FORWARD, direction error < 30°
+Expected: No repulsive forces, no direction mismatches
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 544
+Total events logged: 7
+Log rate: 3.5 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 535
+Direction mismatches: 208
+Stuck events: 535
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 535
+  FORCE_AWAY_FROM_PERSON: 208
+  TURNING_WRONG_WAY: 6
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 1.505, Max: 3.350, Min: 0.504
+Repulsive force  - Avg: 1.902, Max: 4.000, Min: 0.000
+Total force      - Avg: 2.752, Max: 4.751, Min: 0.504
+Zero force percentage: 0.0%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 115.1°, Max: 176.7°, Min: 9.9°
+Large errors (>45°): 324 (91.3%)
+Very large errors (>90°): 208 (58.6%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 129.2° to 143.9° (span: 14.7°)
+Estimated drift: -0.66°
+Yaw variance: 13.90
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• CRITICAL: Frequent direction mismatches - force pointing away from person
+• WARNING: Multiple stuck events detected
+• CRITICAL: Average direction error > 45° - coordinate system issue likely
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✗ TEST 1 (TEST1_DIRECT_FORWARD): FAILED
+  - Average direction error 115.1° exceeds 30° limit
+  - 208 direction mismatches detected
+
+======================================================================
+END OF REPORT
+======================================================================

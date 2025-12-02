@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Optimized LiDAR System
+Optimized LiDAR System - TUNED FOR MOVING ROBOT
 Handles RPLiDAR data acquisition and obstacle detection
+
+TUNING CHANGES (2025-12-01):
+- confidence_decay: 0.05 -> 0.20 (4x faster fade to eliminate ghost obstacles)
+- confidence_threshold: 0.15 -> 0.30 (require stronger confirmation)
+- confidence_increment: 0.25 -> 0.35 (faster buildup for real obstacles)
 """
 import time
 import threading
@@ -13,6 +18,7 @@ try:
 except ImportError as e:
     print(f"WARNING: Missing LiDAR library: {e}")
     LIDAR_AVAILABLE = False
+
 
 class OptimizedLidarSystem:
     """Optimized LiDAR system for obstacle detection and mapping"""
@@ -27,10 +33,13 @@ class OptimizedLidarSystem:
         self.obstacle_confidence = {}
         self.angle_resolution = 1.0
         self.distance_resolution = 50
-        self.confidence_threshold = 0.15
-        self.confidence_increment = 0.25
-        self.confidence_decay = 0.05
+        
+        # TUNED: Faster fade time to eliminate ghost obstacles when robot moves
+        self.confidence_threshold = 0.30  # INCREASED from 0.15 - require stronger confirmation
+        self.confidence_increment = 0.35  # INCREASED from 0.25 - faster buildup
+        self.confidence_decay = 0.20      # INCREASED from 0.05 - 4x faster fade
         self.max_confidence = 1.0
+        
         self.scan_rate = 0
         self.last_scan_time = time.time()
         self.scan_count = 0
@@ -112,7 +121,7 @@ class OptimizedLidarSystem:
                 cur = self.obstacle_confidence.get(key, 0)
                 self.obstacle_confidence[key] = min(self.max_confidence, cur + self.confidence_increment)
         
-        # Decay unseen obstacles
+        # Decay unseen obstacles - TUNED: Faster decay eliminates ghost obstacles
         to_remove = []
         for key, conf in list(self.obstacle_confidence.items()):
             if key not in seen_obstacles:
@@ -125,7 +134,7 @@ class OptimizedLidarSystem:
         for k in to_remove:
             del self.obstacle_confidence[k]
         
-        # Update obstacle list
+        # Update obstacle list - TUNED: Higher threshold filters transient detections
         stable_obstacles = [(a, d) for (a, d), c in self.obstacle_confidence.items() if c >= self.confidence_threshold]
         
         if stable_obstacles:

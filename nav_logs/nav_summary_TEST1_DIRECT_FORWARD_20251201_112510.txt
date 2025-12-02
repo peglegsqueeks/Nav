@@ -1,0 +1,58 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_112510
+Test Mode: TEST1_DIRECT_FORWARD
+Duration: 49.7 seconds (0.8 minutes)
+======================================================================
+
+TEST 1: DIRECT FORWARD TARGET (No Obstacles)
+----------------------------------------
+Expected: Robot moves FORWARD, direction error < 30°
+Expected: No repulsive forces, no direction mismatches
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 157
+Total events logged: 13
+Log rate: 3.2 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 125
+Direction mismatches: 0
+Stuck events: 125
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 125
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 1.873, Max: 3.333, Min: 0.753
+Repulsive force  - Avg: 1.986, Max: 4.000, Min: 0.000
+Total force      - Avg: 2.994, Max: 3.934, Min: 1.880
+Zero force percentage: 0.0%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 21.0°, Max: 42.1°, Min: 0.6°
+Large errors (>45°): 0 (0.0%)
+Very large errors (>90°): 0 (0.0%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 151.7° to 172.4° (span: 20.7°)
+Estimated drift: -3.43°
+Yaw variance: 27.42
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• WARNING: Multiple stuck events detected
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✓ TEST 1 (TEST1_DIRECT_FORWARD): PASSED
+
+======================================================================
+END OF REPORT
+======================================================================

@@ -1,0 +1,40 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_154721
+Test Mode: GENERAL
+Duration: 40.5 seconds (0.7 minutes)
+======================================================================
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 0
+Total events logged: 0
+Log rate: 0.0 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 0
+Direction mismatches: 0
+Stuck events: 0
+Zero force with person: 0
+
+FORCE ANALYSIS
+----------------------------------------
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+
+IMU ANALYSIS
+----------------------------------------
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+No critical issues identified.
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✓ TEST 0 (GENERAL): PASSED
+
+======================================================================
+END OF REPORT
+======================================================================

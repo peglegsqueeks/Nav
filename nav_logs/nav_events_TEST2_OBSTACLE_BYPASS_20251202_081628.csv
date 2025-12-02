@@ -1,0 +1,4 @@
+timestamp,elapsed_time,event_type,event_description,prev_state,new_state,person_detected,person_distance_mm,force_magnitude,commanded_direction,imu_yaw,additional_data
+1764634621.4770699,32.726,TEST_MODE_SET,Test mode set to TEST2_OBSTACLE_BYPASS,NONE,,False,0.0,0.0000,NONE,0.00,
+1764634623.7317805,34.981,STATE_CHANGE,None -> NAVIGATING,NONE,,True,2551.5,6.8287,LEFT,100.46,
+1764634624.092826,35.342,STATE_CHANGE,NAVIGATING -> STUCK,NAVIGATING,,True,2554.5,6.7948,LEFT,100.46,

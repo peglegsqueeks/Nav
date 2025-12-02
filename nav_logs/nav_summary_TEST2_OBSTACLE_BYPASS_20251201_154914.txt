@@ -1,0 +1,66 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_154914
+Test Mode: TEST2_OBSTACLE_BYPASS
+Duration: 78.5 seconds (1.3 minutes)
+======================================================================
+
+TEST 2: OBSTACLE BYPASS
+----------------------------------------
+Expected: Robot navigates AROUND obstacle
+Expected: Repulsive forces active near obstacle
+Expected: No stuck detection, successful bypass
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 380
+Total events logged: 6
+Log rate: 4.8 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 371
+Direction mismatches: 41
+Stuck events: 371
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 371
+  FORCE_AWAY_FROM_PERSON: 41
+  BACKWARD_TOWARD_FRONT_PERSON: 2
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 1.995, Max: 5.348, Min: 0.000
+Repulsive force  - Avg: 7.952, Max: 8.000, Min: 3.161
+Total force      - Avg: 7.492, Max: 8.000, Min: 2.188
+Zero force percentage: 0.0%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 91.3°, Max: 176.9°, Min: 27.6°
+Large errors (>45°): 75 (90.4%)
+Very large errors (>90°): 41 (49.4%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 31.8° to 128.8° (span: 97.0°)
+Estimated drift: 73.84°
+Yaw variance: 1076.34
+WARNING: Significant IMU drift detected!
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• CRITICAL: Frequent direction mismatches - force pointing away from person
+• WARNING: Multiple stuck events detected
+• WARNING: Significant IMU drift may affect navigation
+• CRITICAL: Average direction error > 45° - coordinate system issue likely
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✗ TEST 2 (TEST2_OBSTACLE_BYPASS): FAILED
+  - 371 stuck events - robot may be in local minimum
+
+======================================================================
+END OF REPORT
+======================================================================

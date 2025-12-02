@@ -1,0 +1,703 @@
+DETAILED ANOMALY REPORT
+============================================================
+
+Anomaly #1
+  Time: 74.89s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -148.6°
+  Command: BACKWARDS_LEFT
+
+Anomaly #2
+  Time: 74.92s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -148.5°
+  Command: BACKWARDS_LEFT
+
+Anomaly #3
+  Time: 74.97s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -156.8°
+  Command: BACKWARDS_LEFT
+
+Anomaly #4
+  Time: 75.01s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -142.4°
+  Command: BACKWARDS_LEFT
+
+Anomaly #5
+  Time: 75.05s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -165.8°
+  Command: BACKWARDS
+
+Anomaly #6
+  Time: 75.09s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -150.3°
+  Command: BACKWARDS_LEFT
+
+Anomaly #7
+  Time: 75.13s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 174.0°
+  Command: BACKWARDS
+
+Anomaly #8
+  Time: 75.17s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -176.1°
+  Command: BACKWARDS
+
+Anomaly #9
+  Time: 75.21s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #10
+  Time: 75.25s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 167.9°
+  Command: BACKWARDS
+
+Anomaly #11
+  Time: 75.29s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 150.2°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #12
+  Time: 75.33s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 157.5°
+  Command: BACKWARDS
+
+Anomaly #13
+  Time: 75.37s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 147.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #14
+  Time: 75.41s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 149.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #15
+  Time: 75.44s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 141.6°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #16
+  Time: 75.49s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 147.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #17
+  Time: 75.53s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 137.2°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #18
+  Time: 75.57s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 139.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #19
+  Time: 75.61s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 137.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #20
+  Time: 75.65s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 144.3°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #21
+  Time: 75.69s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 136.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #22
+  Time: 75.73s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 138.7°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #23
+  Time: 75.78s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 142.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #24
+  Time: 75.82s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 141.6°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #25
+  Time: 75.86s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 144.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #26
+  Time: 75.90s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 139.7°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #27
+  Time: 75.94s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 146.3°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #28
+  Time: 75.98s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 143.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #29
+  Time: 76.02s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 145.2°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #30
+  Time: 76.07s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 149.2°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #31
+  Time: 76.10s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #32
+  Time: 76.14s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #33
+  Time: 76.18s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 152.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #34
+  Time: 76.23s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 153.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #35
+  Time: 76.26s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 153.3°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #36
+  Time: 76.31s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 153.3°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #37
+  Time: 76.34s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 156.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #38
+  Time: 76.39s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 156.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #39
+  Time: 76.42s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 171.4°
+  Command: BACKWARDS
+
+Anomaly #40
+  Time: 76.47s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 171.4°
+  Command: BACKWARDS
+
+Anomaly #41
+  Time: 76.50s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.2°
+  Command: BACKWARDS
+
+Anomaly #42
+  Time: 76.55s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.2°
+  Command: BACKWARDS
+
+Anomaly #43
+  Time: 76.59s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -178.0°
+  Command: BACKWARDS
+
+Anomaly #44
+  Time: 76.63s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -178.0°
+  Command: BACKWARDS
+
+Anomaly #45
+  Time: 76.67s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -178.9°
+  Command: BACKWARDS
+
+Anomaly #46
+  Time: 76.71s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.0°
+  Command: BACKWARDS
+
+Anomaly #47
+  Time: 76.75s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.0°
+  Command: BACKWARDS
+
+Anomaly #48
+  Time: 76.79s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.0°
+  Command: BACKWARDS
+
+Anomaly #49
+  Time: 76.84s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.9°
+  Command: BACKWARDS
+
+Anomaly #50
+  Time: 76.88s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -178.0°
+  Command: BACKWARDS
+
+Anomaly #51
+  Time: 76.92s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -178.0°
+  Command: BACKWARDS
+
+Anomaly #52
+  Time: 76.95s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 178.9°
+  Command: BACKWARDS
+
+Anomaly #53
+  Time: 76.99s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 178.9°
+  Command: BACKWARDS
+
+Anomaly #54
+  Time: 77.04s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.3°
+  Command: BACKWARDS
+
+Anomaly #55
+  Time: 77.08s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: -179.3°
+  Command: BACKWARDS
+
+Anomaly #56
+  Time: 77.12s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 179.0°
+  Command: BACKWARDS
+
+Anomaly #57
+  Time: 77.16s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 179.0°
+  Command: BACKWARDS
+
+Anomaly #58
+  Time: 77.20s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 177.5°
+  Command: BACKWARDS
+
+Anomaly #59
+  Time: 77.24s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 177.5°
+  Command: BACKWARDS
+
+Anomaly #60
+  Time: 77.28s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 176.4°
+  Command: BACKWARDS
+
+Anomaly #61
+  Time: 77.32s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 176.4°
+  Command: BACKWARDS
+
+Anomaly #62
+  Time: 77.36s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 170.1°
+  Command: BACKWARDS
+
+Anomaly #63
+  Time: 77.41s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 170.1°
+  Command: BACKWARDS
+
+Anomaly #64
+  Time: 77.45s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 159.5°
+  Command: BACKWARDS
+
+Anomaly #65
+  Time: 77.48s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 159.5°
+  Command: BACKWARDS
+
+Anomaly #66
+  Time: 77.53s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #67
+  Time: 77.56s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.8°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #68
+  Time: 77.61s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #69
+  Time: 77.65s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 154.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #70
+  Time: 77.69s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 152.7°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #71
+  Time: 77.73s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 152.7°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #72
+  Time: 77.77s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 151.3°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #73
+  Time: 77.81s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 147.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #74
+  Time: 77.85s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 147.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #75
+  Time: 77.89s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 145.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #76
+  Time: 77.93s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 145.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #77
+  Time: 77.97s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 143.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #78
+  Time: 78.02s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 347.4°
+  Force direction: 143.0°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #79
+  Time: 78.06s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 347.2°
+  Force direction: 144.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #80
+  Time: 78.09s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 347.2°
+  Force direction: 144.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #81
+  Time: 78.14s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 345.7°
+  Force direction: 147.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #82
+  Time: 78.18s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 345.7°
+  Force direction: 147.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #83
+  Time: 78.22s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 345.7°
+  Force direction: 151.9°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #84
+  Time: 78.26s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 345.7°
+  Force direction: 151.9°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #85
+  Time: 78.30s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 345.7°
+  Force direction: 153.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #86
+  Time: 78.34s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 344.6°
+  Force direction: 153.1°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #87
+  Time: 78.38s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 344.6°
+  Force direction: 153.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #88
+  Time: 78.42s
+  Types: FORCE_AWAY_FROM_PERSON, STUCK_DETECTED
+  Person angle: 344.6°
+  Force direction: 153.5°
+  Command: BACKWARDS_RIGHT
+
+Anomaly #89
+  Time: 78.46s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 160.4°
+  Command: NONE
+
+Anomaly #90
+  Time: 78.50s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 160.4°
+  Command: NONE
+
+Anomaly #91
+  Time: 78.54s
+  Types: STUCK_DETECTED
+  Person angle: 0.0°
+  Force direction: 170.1°
+  Command: NONE
+
+Anomaly #92
+  Time: 78.58s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 343.0°
+  Force direction: 170.1°
+  Command: BACKWARDS
+
+Anomaly #93
+  Time: 78.62s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 343.0°
+  Force direction: 173.5°
+  Command: BACKWARDS
+
+Anomaly #94
+  Time: 78.67s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 343.1°
+  Force direction: 173.5°
+  Command: BACKWARDS
+
+Anomaly #95
+  Time: 78.70s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 343.1°
+  Force direction: 175.4°
+  Command: BACKWARDS
+
+Anomaly #96
+  Time: 78.74s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 342.4°
+  Force direction: 175.4°
+  Command: BACKWARDS
+
+Anomaly #97
+  Time: 78.78s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 341.2°
+  Force direction: 169.7°
+  Command: BACKWARDS
+
+Anomaly #98
+  Time: 78.83s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 340.8°
+  Force direction: 169.7°
+  Command: BACKWARDS
+
+Anomaly #99
+  Time: 78.86s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 340.8°
+  Force direction: 179.0°
+  Command: BACKWARDS
+
+Anomaly #100
+  Time: 78.91s
+  Types: FORCE_AWAY_FROM_PERSON, BACKWARD_TOWARD_FRONT_PERSON, STUCK_DETECTED
+  Person angle: 340.8°
+  Force direction: -176.9°
+  Command: BACKWARDS
+

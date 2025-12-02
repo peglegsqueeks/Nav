@@ -1,10 +1,46 @@
 #!/usr/bin/env python3
 """
-Potential Field Navigation System - FIXED DIRECTION BUG
+Potential Field Navigation System with Target Reacquisition - VERSION 3.1
 Main navigation controller that integrates person detection, obstacle avoidance,
 and robot movement using potential field mathematics
-FIXED: Deque slice indexing error in get_navigation_status()
-FIXED: Movement direction now correctly uses robot-relative coordinates
+
+VERSION HISTORY:
+v3.1 (2025-12-02 09:00): REVERTED SCREEN_X CHANGES
+- REVERTED: Removed screen_x parameter from update_person_target()
+- REVERTED: Removed last_person_screen_x tracking
+- Head direction in reacquisition now defaults to 'center'
+- Person detection system restored to previous working state
+
+v3 (2025-12-01 16:00): STOP AND REACQUIRE METHODOLOGY
+- CRITICAL: person_lost_threshold: 0.5s → 0.25s (IMMEDIATE response)
+- METHODOLOGY CHANGE: Robot STOPS completely when person lost > 0.25s
+- Head tracking: Turns toward last screen position (left/right)
+- Body rotation: Turns toward pre-avoidance orientation  
+- NO forward motion until target reacquired
+- Added get_reacquisition_control_data() for head/body control
+- Detects obstacle avoidance start (stores pre-avoidance orientation)
+- Tracks last person screen X position for head direction
+
+v2 (2025-12-01 15:30): TARGET REACQUISITION - RAPID RESPONSE
+- Reduced person_lost_threshold: 2.0s → 0.5s (4x faster detection)
+- Reduced person_timeout: 3.0s → 1.0s (lose target faster)
+- Added EMERGENCY STOP when person lost (prevents crash)
+- Reacquisition now OVERRIDES all other forces (pure rotation)
+- Added reacquisition_in_progress flag to block normal navigation
+- Reduced reacquisition turn speeds for precision
+
+v1 (2025-12-01 14:00): TARGET REACQUISITION - INITIAL
+- Added target position memory system (IMU-based bearing storage)
+- Added reacquisition mode state machine
+- New methods: calculate_reacquisition_bearing(), generate_reacquisition_movement()
+- Modified update_person_target() to store memory
+- Modified generate_movement_command() to handle reacquisition
+
+PREVIOUS FIXES (2025-12-01 11:00):
+- Reset last_significant_movement when navigation is enabled
+- Increased stuck_threshold_time from 8s to 10s
+- Fixed deque slice indexing in get_navigation_status()
+- Fixed coordinate system (atan2 argument order for robot frame)
 """
 import time
 import math
@@ -14,9 +50,10 @@ from typing import Optional, Dict, Any, List, Tuple
 from .field_calculations import PotentialFieldCalculations
 from .navigation_state_machine import NavigationStateMachine
 
+
 class PotentialFieldNavigator:
     """
-    Main potential field navigation controller - FIXED DIRECTION VERSION
+    Main potential field navigation controller - FIXED VERSION
     Coordinates person detection, obstacle avoidance, and robot movement
     """
     
@@ -29,7 +66,20 @@ class PotentialFieldNavigator:
         self.navigation_enabled = False
         self.person_target = None  # Current person target position
         self.last_person_update = 0.0
-        self.person_timeout = 3.0  # seconds - lose target if no updates
+        self.person_timeout = 1.0  # CRITICAL: Reduced from 3.0s - lose target faster!
+        
+        # TARGET POSITION MEMORY SYSTEM
+        self.last_known_person_bearing = None  # IMU bearing to person (degrees)
+        self.last_known_person_position = None  # (x, y) in robot frame
+        self.person_bearing_timestamp = 0.0  # When bearing was stored
+        self.pre_avoidance_orientation = None  # IMU orientation BEFORE obstacle avoidance started
+        self.in_obstacle_avoidance = False  # Flag: Currently avoiding obstacle
+        self.person_lost_timestamp = None  # When person was lost
+        self.reacquisition_mode = False  # Are we trying to reacquire the target?
+        self.reacquisition_in_progress = False  # EMERGENCY: Block all movement except reacquisition
+        self.reacquisition_timeout = 15.0  # seconds - max age of memory
+        self.person_lost_threshold = 0.25  # CRITICAL: Reduced to 0.25s - STOP immediately!
+        self.emergency_stop_on_loss = True  # CRITICAL: Stop robot when person lost
         
         # Robot state tracking
         self.robot_position = {'x': 0.0, 'y': 0.0, 'orientation': 0.0}
@@ -56,7 +106,7 @@ class PotentialFieldNavigator:
         
         # Safety and performance monitoring
         self.stuck_detection_enabled = True
-        self.stuck_threshold_time = 8.0  # seconds
+        self.stuck_threshold_time = 10.0  # TUNED: Increased from 8.0 seconds
         self.last_significant_movement = time.time()
         self.min_movement_distance = 30.0  # mm
         
@@ -97,43 +147,90 @@ class PotentialFieldNavigator:
     
     def update_person_target(self, person_data: Optional[Dict[str, Any]], 
                            lidar_distance: float, lidar_angle: float):
-        """Update current person target from detection system"""
+        """Update person target from detection system with memory"""
         try:
             current_time = time.time()
             
             if person_data and lidar_distance > 0:
-                # Convert polar coordinates to cartesian (relative to robot)
+                # Convert LiDAR polar to Cartesian
+                # In LiDAR frame: 0° = forward, positive angles = right
                 angle_rad = math.radians(lidar_angle)
-                person_x = self.robot_position['x'] + lidar_distance * math.cos(angle_rad)
-                person_y = self.robot_position['y'] + lidar_distance * math.sin(angle_rad)
                 
                 self.person_target = {
-                    'x': person_x,
-                    'y': person_y,
+                    'x': lidar_distance * math.sin(angle_rad),  # Lateral
+                    'y': lidar_distance * math.cos(angle_rad),  # Forward
                     'distance': lidar_distance,
                     'angle': lidar_angle,
-                    'confidence': person_data.get('confidence', 0.0),
-                    'timestamp': current_time
+                    'confidence': person_data.get('confidence', 0.5)
                 }
-                
                 self.last_person_update = current_time
                 
-                if self.debug_enabled:
-                    print(f"Person target updated: ({person_x:.1f}, {person_y:.1f}) at {lidar_distance:.0f}mm")
+                # TARGET MEMORY: Store bearing to person (IMU-based)
+                # Calculate absolute bearing: robot orientation + relative angle
+                current_orientation = self.robot_position.get('orientation', 0.0)
+                absolute_bearing = self._normalize_angle(current_orientation + lidar_angle)
+                self.last_known_person_bearing = absolute_bearing
+                self.last_known_person_position = (self.person_target['x'], self.person_target['y'])
+                self.person_bearing_timestamp = current_time
+                
+                # Store pre-avoidance orientation if not in avoidance yet
+                if not self.in_obstacle_avoidance and self.pre_avoidance_orientation is None:
+                    self.pre_avoidance_orientation = current_orientation
+                    if self.debug_enabled:
+                        print(f"📍 Stored pre-avoidance orientation: {self.pre_avoidance_orientation:.1f}°")
+                
+                # Person found - exit reacquisition mode and obstacle avoidance
+                if self.reacquisition_mode:
+                    self.reacquisition_mode = False
+                    self.reacquisition_in_progress = False
+                    self.in_obstacle_avoidance = False
+                    self.pre_avoidance_orientation = None  # Reset for next avoidance
+                    if self.debug_enabled:
+                        print("✓ Target reacquired!")
+                
+                # Clear person lost tracking
+                self.person_lost_timestamp = None
+                
             else:
-                # Check if target has timed out
-                if current_time - self.last_person_update > self.person_timeout:
-                    if self.person_target:
+                # Person not detected - track how long we've been without target
+                if self.person_target is not None:
+                    # Just lost the person
+                    if self.person_lost_timestamp is None:
+                        self.person_lost_timestamp = current_time
                         if self.debug_enabled:
-                            print("Person target lost (timeout)")
+                            print(f"⚠ Person lost at {current_time:.1f}s")
+                
+                # Check for person timeout
+                if self.person_target and (current_time - self.last_person_update) > self.person_timeout:
                     self.person_target = None
+                    
+                    # Enter reacquisition mode if we have a memory and been lost long enough
+                    if (self.last_known_person_bearing is not None and 
+                        self.person_lost_timestamp is not None and
+                        (current_time - self.person_lost_timestamp) > self.person_lost_threshold):
+                        
+                        # Check if memory is still valid (not too old)
+                        memory_age = current_time - self.person_bearing_timestamp
+                        if memory_age < self.reacquisition_timeout:
+                            if not self.reacquisition_mode:
+                                self.reacquisition_mode = True
+                                self.reacquisition_in_progress = True  # EMERGENCY: Block normal navigation
+                                if self.debug_enabled:
+                                    print(f"🛑 EMERGENCY: Person lost! Entering reacquisition mode.")
+                                    print(f"→ Last bearing: {self.last_known_person_bearing:.1f}°")
+                        else:
+                            # Memory too old - give up
+                            self.last_known_person_bearing = None
+                            self.last_known_person_position = None
+                            if self.debug_enabled:
+                                print("⚠ Memory too old - giving up on reacquisition")
                     
         except Exception as e:
             if self.debug_enabled:
                 print(f"Error updating person target: {e}")
     
     def calculate_navigation_forces(self, obstacles: List[Tuple[float, float]]) -> Dict[str, Tuple[float, float]]:
-        """Calculate attractive and repulsive forces for navigation"""
+        """Calculate attractive and repulsive forces"""
         try:
             attractive_force = (0.0, 0.0)
             repulsive_force = (0.0, 0.0)
@@ -166,6 +263,19 @@ class PotentialFieldNavigator:
                 'total': total_force
             }
             
+            # DETECT OBSTACLE AVOIDANCE: Set flag when repulsive force is significant
+            repulsive_magnitude = math.sqrt(repulsive_force[0]**2 + repulsive_force[1]**2)
+            if repulsive_magnitude > 2.0:  # Threshold for "significant" repulsion
+                if not self.in_obstacle_avoidance:
+                    self.in_obstacle_avoidance = True
+                    if self.debug_enabled:
+                        print(f"🚧 Obstacle avoidance STARTED (repulsive: {repulsive_magnitude:.1f})")
+            elif repulsive_magnitude < 0.5:  # Clear when repulsion drops
+                if self.in_obstacle_avoidance:
+                    self.in_obstacle_avoidance = False
+                    if self.debug_enabled:
+                        print(f"✓ Obstacle cleared")
+            
             return self.current_forces
             
         except Exception as e:
@@ -178,19 +288,64 @@ class PotentialFieldNavigator:
             }
     
     def generate_movement_command(self):
-        """Generate movement command from current forces - FIXED DIRECTION"""
+        """Generate movement command from current forces or reacquisition mode"""
         try:
             if not self.navigation_enabled:
+                return None
+            
+            # EMERGENCY STOP: If person lost and emergency mode enabled, STOP immediately
+            if (self.emergency_stop_on_loss and 
+                self.person_lost_timestamp is not None and 
+                not self.reacquisition_mode):
+                # Person just lost, not yet in reacquisition - STOP!
+                current_time = time.time()
+                time_since_loss = current_time - self.person_lost_timestamp
+                if time_since_loss < self.person_lost_threshold:
+                    if self.debug_enabled:
+                        print(f"🛑 EMERGENCY STOP: Person lost {time_since_loss:.1f}s ago, waiting for reacquisition")
+                    self.current_movement_command = None
+                    return None
+            
+            # CRITICAL: REACQUISITION MODE - OVERRIDE ALL OTHER FORCES
+            if self.reacquisition_in_progress:
+                reacq_command = self.generate_reacquisition_movement()
+                if reacq_command:
+                    # Convert VelocityConfig to command dict
+                    command = {
+                        'direction': reacq_command.direction.name,
+                        'speed': reacq_command.speed
+                    }
+                    
+                    # Track command
+                    current_time = time.time()
+                    self.current_movement_command = {
+                        'direction': reacq_command.direction.name,
+                        'speed': reacq_command.speed,
+                        'timestamp': current_time,
+                        'force_magnitude': 0.0  # Not force-driven
+                    }
+                    
+                    if self.debug_enabled:
+                        print(f"↻ Reacquisition: {reacq_command.direction.name} at {reacq_command.speed:.2f}")
+                    
+                    return command
+                else:
+                    # Reacquisition failed - exit mode
+                    self.reacquisition_mode = False
+                    self.reacquisition_in_progress = False
+            
+            # NORMAL NAVIGATION MODE: Use potential fields
+            # SAFETY: Stop if goal (person) is reached
+            if self.check_goal_reached():
+                if self.debug_enabled:
+                    print("Goal reached - stopping movement")
+                self.current_movement_command = None
                 return None
             
             total_force = self.current_forces['total']
             
             # FIXED: Use orientation = 0.0 because forces are already calculated in 
             # robot-relative coordinates (based on LiDAR angle where 0 = directly in front).
-            # The force direction from calculate_attractive_field is determined by the 
-            # LiDAR angle offset (person_x - robot_x, person_y - robot_y), which equals
-            # (distance * cos(lidar_angle), distance * sin(lidar_angle)).
-            # This is already robot-relative, so we don't need IMU orientation adjustment.
             direction_str, speed = self.field_calculator.convert_force_to_velocity(
                 total_force[0], total_force[1], 0.0
             )
@@ -243,9 +398,8 @@ class PotentialFieldNavigator:
                 self.goals_reached += 1
                 if self.debug_enabled:
                     print("Navigation goal reached!")
-                return True
                 
-            return False
+            return goal_reached
             
         except Exception as e:
             if self.debug_enabled:
@@ -288,6 +442,13 @@ class PotentialFieldNavigator:
         if not self.navigation_enabled:
             self.navigation_enabled = True
             self.navigation_start_time = time.time()
+            
+            # FIXED: Reset stuck detection timer when enabling navigation
+            self.last_significant_movement = time.time()
+            
+            # Clear position history to start fresh
+            self.position_history.clear()
+            
             self.state_machine.start_navigation()
             
             if self.debug_enabled:
@@ -392,6 +553,13 @@ class PotentialFieldNavigator:
                     'avg_repulsive_magnitude': force_stats['avg_repulsive_magnitude'],
                     'avg_total_force_magnitude': force_stats['avg_total_magnitude'],
                     
+                    # Target reacquisition status (NEW)
+                    'reacquisition_mode': self.reacquisition_mode,
+                    'has_target_memory': self.last_known_person_bearing is not None,
+                    'last_known_bearing': self.last_known_person_bearing if self.last_known_person_bearing is not None else 0.0,
+                    'target_bearing': self.calculate_reacquisition_bearing() if self.last_known_person_bearing is not None else 0.0,
+                    'time_since_person_lost': time.time() - self.person_lost_timestamp if self.person_lost_timestamp else 0.0,
+                    
                     # Field parameters
                     'attractive_strength': self.field_calculator.attractive_strength,
                     'repulsive_strength': self.field_calculator.repulsive_strength,
@@ -473,3 +641,100 @@ class PotentialFieldNavigator:
         
         if self.debug_enabled:
             print("Navigation statistics reset")
+    
+    # ============================================================================
+    # TARGET REACQUISITION METHODS (NEW)
+    # ============================================================================
+    
+    def _normalize_angle(self, angle_deg: float) -> float:
+        """Normalize angle to [-180, 180] range"""
+        while angle_deg > 180:
+            angle_deg -= 360
+        while angle_deg < -180:
+            angle_deg += 360
+        return angle_deg
+    
+    def calculate_reacquisition_bearing(self) -> Optional[float]:
+        """
+        Calculate the bearing to turn toward to reacquire the person.
+        Uses IMU to compensate for rotation during obstacle avoidance.
+        
+        Returns:
+            Target bearing in degrees (robot-relative), or None if no memory
+        """
+        try:
+            if self.last_known_person_bearing is None:
+                return None
+            
+            current_orientation = self.robot_position.get('orientation', 0.0)
+            
+            # Calculate relative bearing to the last known person position
+            # This accounts for robot rotation since person was last seen
+            relative_bearing = self._normalize_angle(
+                self.last_known_person_bearing - current_orientation
+            )
+            
+            return relative_bearing
+            
+        except Exception as e:
+            if self.debug_enabled:
+                print(f"Error calculating reacquisition bearing: {e}")
+            return None
+    
+    def generate_reacquisition_movement(self) -> Optional[Any]:
+        """
+        NEW METHODOLOGY: STOP completely during reacquisition.
+        Head and body will rotate to find person, but NO forward/backward motion.
+        
+        Returns:
+            NONE movement command (full stop)
+        """
+        try:
+            from systems.movement.velocity_config import VelocityConfig, MovementDirection
+            
+            # CRITICAL: Complete STOP - no robot motion during reacquisition
+            # Head tracking and body rotation handled separately by main system
+            if self.debug_enabled:
+                print(f"🛑 REACQUISITION MODE: Robot STOPPED (head/body will scan)")
+            
+            return VelocityConfig(MovementDirection.NONE, 0.0)
+            
+        except Exception as e:
+            if self.debug_enabled:
+                print(f"Error generating reacquisition movement: {e}")
+            return None
+    
+    def get_reacquisition_control_data(self) -> Optional[Dict[str, Any]]:
+        """
+        Get data needed for reacquisition control (head tracking and body rotation).
+        
+        Returns:
+            Dictionary with:
+            - in_reacquisition: bool
+            - head_direction: 'left', 'right', or 'center' (based on last screen position)
+            - body_target_orientation: float (pre-avoidance orientation)
+            - current_orientation: float (current robot orientation)
+        """
+        try:
+            if not self.reacquisition_in_progress:
+                return None
+            
+            # Default head direction to center (no screen position available)
+            head_direction = 'center'
+            
+            current_orientation = self.robot_position.get('orientation', 0.0)
+            
+            return {
+                'in_reacquisition': True,
+                'head_direction': head_direction,
+                'body_target_orientation': self.pre_avoidance_orientation,
+                'current_orientation': current_orientation,
+                'bearing_error': self._normalize_angle(
+                    self.pre_avoidance_orientation - current_orientation
+                ) if self.pre_avoidance_orientation is not None else 0.0
+            }
+            
+        except Exception as e:
+            if self.debug_enabled:
+                print(f"Error getting reacquisition control data: {e}")
+            return None

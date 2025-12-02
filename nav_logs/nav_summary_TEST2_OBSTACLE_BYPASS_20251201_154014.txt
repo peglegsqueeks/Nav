@@ -1,0 +1,62 @@
+======================================================================
+NAVIGATION DIAGNOSTICS SUMMARY REPORT
+Session: 20251201_154014
+Test Mode: TEST2_OBSTACLE_BYPASS
+Duration: 76.8 seconds (1.3 minutes)
+======================================================================
+
+TEST 2: OBSTACLE BYPASS
+----------------------------------------
+Expected: Robot navigates AROUND obstacle
+Expected: Repulsive forces active near obstacle
+Expected: No stuck detection, successful bypass
+
+BASIC STATISTICS
+----------------------------------------
+Total log entries: 535
+Total events logged: 12
+Log rate: 7.0 Hz
+
+ANOMALY SUMMARY
+----------------------------------------
+Total anomalies detected: 292
+Direction mismatches: 0
+Stuck events: 292
+Zero force with person: 0
+
+Anomaly breakdown:
+  STUCK_DETECTED: 292
+
+FORCE ANALYSIS
+----------------------------------------
+Attractive force - Avg: 2.689, Max: 5.994, Min: 0.000
+Repulsive force  - Avg: 8.000, Max: 8.000, Min: 8.000
+Total force      - Avg: 7.937, Max: 8.000, Min: 7.241
+Zero force percentage: 0.0%
+
+DIRECTION ERROR ANALYSIS
+----------------------------------------
+Direction error - Avg: 22.5°, Max: 77.8°, Min: 6.1°
+Large errors (>45°): 8 (4.2%)
+Very large errors (>90°): 0 (0.0%)
+
+IMU ANALYSIS
+----------------------------------------
+Yaw range: 114.3° to 154.5° (span: 40.1°)
+Estimated drift: 21.73°
+Yaw variance: 35.18
+WARNING: Significant IMU drift detected!
+
+KEY ISSUES IDENTIFIED
+----------------------------------------
+• WARNING: Multiple stuck events detected
+• WARNING: Significant IMU drift may affect navigation
+
+TEST RESULT ANALYSIS
+----------------------------------------
+✗ TEST 2 (TEST2_OBSTACLE_BYPASS): FAILED
+  - 292 stuck events - robot may be in local minimum
+
+======================================================================
+END OF REPORT
+======================================================================
